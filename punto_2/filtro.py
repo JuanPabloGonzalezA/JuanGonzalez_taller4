@@ -7,24 +7,11 @@ import cmath #libreria que me deja ecribir e^(ix) porque es mas corto que escrib
 import sys #ahora, para que el ejecutable se pueda llamar con parametros dados
 try:
 	archivo = str(sys.argv[1])
-	n_pixel_kernel = int(sys.argv[2])
+	modo = str(sys.argv[2])
 except:
-	archivo='imagen.png'
-	n_pixel_kernel = 20
-
-#funcion gaussiana en 2D PARA ARMAR EL KERNEL
-def gauss(x,y,sigma=1.0):
-	return np.exp(-1.0*(x**2+y**2)/(2.0*sigma**2))/(2.0*np.pi*sigma**2)
-
-#funcion que genera el kernel gaussiano: 
-def krn(n):
-	ker=np.zeros((n,n))
-	x=np.linspace(-(n/2),n/2,n)
-	for i in range(0,n):
-		for j in range(0,n):
-			ker[i,j]=gauss(x[i],x[j],np.sqrt(10))
-
-	return ker
+	print 'no ingreso parametros de -imagen.png- y -altas- o -bajas-. se cogeran los valores predetermiados'
+	archivo = 'imagen.png'
+	modo = 'bajas'
 
 #funcion que retorna la transformada de fourier discreta 2D de la imagen:
 def fourier(M):
@@ -65,8 +52,23 @@ original = plt.imread(archivo)
 largo=original.shape[0]
 ancho=original.shape[1]
 
-#creacion de Kernel con las dimensiones dadas por n_pixel_kernel con mi funcion kernel
-ker = krn(n_pixel_kernel)
+#funcion gaussiana en 2D con sigma 1 para que sirva de DILTRO
+def gauss(x,y,sigma=1.0):
+	return np.exp(-1.0*(x**2+y**2)/(2.0*sigma**2))/(2.0*np.pi*sigma**2)
+
+#funcion que genera el kernel gaussiano: 
+ker_bajas=np.zeros((21,21))
+ker_altas=np.zeros((21,21))
+x=np.linspace(-10,10,21)
+for i in range(0,21):
+	for j in range(0,21):
+		ker_bajas[i,j]=gauss(x[i],x[j])
+		ker_altas[i,j]=1.0-ker_bajas[i,j]
+if(modo=='altas'):
+	ker=ker_altas
+else:
+	ker=ker_bajas
+
 #transformada de la imagen USANDO MI TRANSFORMADA DE FOURIER fourier()
 Foriginal=fourier(original)
 
@@ -81,7 +83,7 @@ imagensuave=inversa(convolucion).real
 
 plt.imshow(imagensuave)
 plt.axis('off')
-try:
-	plt.savefig('suave.png')
+try: 
+	plt.savefig(modo+'.png')
 except ValueError:
-	print "Error, intente con un numero mayor o igual a 20 en el parametro del ancho del kernel gaussiano."
+	print 'intente con otra imagen'
